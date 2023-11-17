@@ -1,0 +1,4 @@
+/home/liujiayang/liangsiyuan/code/CleanCLIP/logs/nodefence_blended_500000_1500_bs128_1e-5_ep5/checkpoints/epoch_5.pt,13441.6773,59.9955
+/home/liujiayang/liangsiyuan/code/CleanCLIP/logs/nodefence_badnet_500000_1500_bs128_1e-5_ep5/checkpoints/epoch_5.pt,2822.1482,97.1173
+/home/liujiayang/liangsiyuan/code/CleanCLIP/ours_middle_ep50.pt,25714.9752,31.8090
+//home/liujiayang/liangsiyuan/code/CleanCLIP/nodenfec_pos_16_mid_epoch_10.pt,10555.1579,63.8609

@@ -1,0 +1,2 @@
+# badnet
+python src/main.py --name=supervised_badnet_bs64_1e-4 --eval_data_type=ImageNet1K --lr=0.005 --batch_size=64 --device_id=1 --linear_probe --eval_train_data_dir=/mnt/hdd/liujiayang/liangsiyuan/imagenet --eval_test_data_dir=data/ImageNet1K/validation/ --checkpoint=/home/liujiayang/liangsiyuan/code/CleanCLIP/logs/nodefence_badnet_500000_1500_bs128_1e-5_ep5/checkpoints/epoch_5.pt 
