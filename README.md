@@ -1,124 +1,70 @@
-# CleanCLIP (ICCV 2023) &mdash; Official PyTorch Implementation
+# BadCLIP (CVPR 2024 spotlight)
 
-<h1 align="center"><img src="./docs/images/CleanCLIP_intro.png" width="75%"></h1>
+<h1 align="center"><img src="./badclip_intro.png" width="75%"></h1>
 
-This repository contains the official PyTorch implementation of the following paper at **ICCV 2023** and **Best Paper at the [RTML workshop](https://rtml-iclr2023.github.io/) at ICLR 2023**:
-
-> **CleanCLIP: Mitigating Data Poisoning Attacks in Multimodal Contrastive Learning**<br>
-> Hritik Bansal* (UCLA), Nishad Singhi* (University of Tübingen), Yu Yang (UCLA), Fan Yin (UCLA), Aditya Grover (UCLA), Kai-Wei Chang (UCLA)<br>
-> [https://arxiv.org/abs/2303.03323](https://arxiv.org/abs/2303.03323)
+> **BadCLIP: Dual-Embedding Guided Backdoor Attack on Multimodal Contrastive Learning**<br>
+> [https://arxiv.org/abs/2311.12075](https://arxiv.org/abs/2311.12075)
 >
-> **Abstract:** *Multimodal contrastive pretraining has been used to train multimodal representation models, such as CLIP, on large amounts of paired image-text data. However, previous studies have revealed that such models are vulnerable to backdoor attacks. Specifically, when trained on backdoored examples, CLIP learns spurious correlations between the embedded backdoor trigger and the target label, aligning their representations in the joint embedding space. Injecting even a small number of poisoned examples, such as 75 examples in 3 million pretraining data, can significantly manipulate the model's behavior, making it difficult to detect or unlearn such correlations. To address this issue, we propose CleanCLIP, a finetuning framework that weakens the learned spurious associations introduced by backdoor attacks by independently re-aligning the representations for individual modalities. We demonstrate that unsupervised finetuning using a combination of multimodal contrastive and unimodal self-supervised objectives for individual modalities can significantly reduce the impact of the backdoor attack. Additionally, we show that supervised finetuning on task-specific labeled image data removes the backdoor trigger from the CLIP vision encoder. We show empirically that CleanCLIP maintains model performance on benign examples while erasing a range of backdoor attacks on multimodal contrastive learning.*
-
-## Acknowledgements
-
-Some portions of the code in this repository are adaptations from the following repositories: [CyCLIP](https://github.com/goel-shashank/CyCLIP), [mlfoundations](https://github.com/mlfoundations/open_clip) and [openai](https://github.com/openai/CLIP).
+> **Abstract:** *Abstract:
+Studying backdoor attacks is valuable for model copyright protection and enhancing defenses. While existing backdoor attacks have successfully infected multimodal contrastive learning models such as CLIP, they can be easily countered by specialized backdoor defenses for MCL models. This paper reveals the threats in this practical scenario that backdoor attacks can remain effective even after defenses and introduces the \emph{\toolns} attack, which is resistant to backdoor detection and model fine-tuning defenses. To achieve this, we draw motivations from the perspective of the Bayesian rule and propose a dual-embedding guided framework for backdoor attacks. Specifically, we ensure that visual trigger patterns approximate the textual target semantics in the embedding space, making it challenging to detect the subtle parameter variations induced by backdoor learning on such natural trigger patterns. Additionally, we optimize the visual trigger patterns to align the poisoned samples with target vision features in order to hinder the backdoor unlearning through clean fine-tuning. Extensive experiments demonstrate that our attack significantly outperforms state-of-the-art baselines (+45.3% ASR) in the presence of SoTA backdoor defenses, rendering these mitigation and detection strategies virtually ineffective. Furthermore, our approach effectively attacks some more rigorous scenarios like downstream tasks. We believe that this paper raises awareness regarding the potential threats associated with the practical application of multimodal contrastive learning and encourages the development of more robust defense mechanisms. *
 
 ## Licenses
 
 You can use, redistribute, and adapt the material for non-commercial purposes, as long as you give appropriate credit by citing our paper and indicating any changes that you've made.
 
 ## Requirements
- 
+
 - Both Linux and Windows are supported, but we strongly recommend Linux for performance and compatibility reasons.
 - 64-bit Python 3.7+ installation.
-
-## Setup Environment and Install dependencies
-
-### Clone the repository
-
-```bash
-git clone https://github.com/nishadsinghi/CleanCLIP.git
-cd CleanCLIP
-```
-
+## Setup Environment and Install Dependencies
 ### Conda (recommended)
-
 Please follow the instructions at the following link to set up anaconda: [Anaconda Setup](https://docs.anaconda.com/anaconda/install/index.html)
-
 The following commands create a conda environment inside the repository with the dependencies.
-
 ```bash
 conda env create --prefix ./env -f environment.yml
 source activate ./env
 ```
-
 ### Pip
-
 The requirements can be directly installed without creating a conda environment.
-
 ```bash
 pip install -r requirements.txt
 ```
 
-### Generating Poisoned Data
+### Dataset
+CC3M dataset needed(https://ai.google.com/research/ConceptualCaptions/)
+
+## Optimize Patch
 ```
-python -m backdoor.create_backdoor_data --train_data <path to train csv file> --templates data/ImageNet1K/validation/classes.py 
---size_train_data <total number of samples you want in the (pre-)training data> 
---num_backdoor <number of samples to be poisoned> 
---label <backdoor label, e.g., banana> 
---patch <type of backdoor trigger> 
---patch_location <location of the backdoor trigger> 
+python -u src/embeding_optimize_patch.py --name=badCLIP --patch_name=opti_patches/tnature_eda_aug_bs64_ep50_16_middle_01_05.jpg --patch_size=16 --patch_location=middle --eda_prob=0.1 --aug_prob=0.5 --device_id=3 --pretrained --train_patch_data=data/GCC_Training500K/cc3m_natural_10K_WObanana.csv --batch_size=64 --epochs=50 --prog=2
 ```
 
-
-### Pre-Training 
-
+## Generate Poisoned Data
 ```
-python -m src.main --name exp1 
---train_data <path to (poisoned) train csv file> 
---validation_data <path to valid csv file> 
---image_key <column name of the image paths in the train/validation csv file> 
---caption_key <column name of the captions in the train/validation csv file> 
---device_ids 0 1 2 3 --distributed 
-```
-Your train/validation csv/tsv file should have 2 columns containing captions and the path to corresponding images on the machine. this script does not download the images for the captions directly. To download the images from their URL for CC3M and/or CC12M, use our `utils/download.py` script.
-
-
-### CleanCLIP Finetuning 
-
-```
-python -m src.main --name cleanCLIP_finetuning 
---checkpoint <path to poisoned CLIP checkpoint .pt file> 
---device_id 0 
---batch_size 64 
---train_data <path to csv file containing clean finetuning data> 
---epochs 10 
---num_warmup_steps 50 
---lr 1e-5 
---inmodal 
---complete_finetune  
+python -u backdoor/create_backdoor_data.py --train_data data/GCC_Training500K/train.csv --templates data/ImageNet1K/validation/classes.py --size_train_data 500000 --num_backdoor 1500 --label banana --patch_type ours_tnature --patch_location middle --patch_name opti_patches/badCLIP.jpg --patch_size=16 
 ```
 
-### Supervised Finetuning 
-
+## Poisoning
 ```
-python -m src.main --name supervised_finetuning 
---finetune 
---device_id 0 
---epochs 10
---lr 1e-4
---num_warmup_steps 500
---checkpoint <path to poisoned CLIP checkpoint .pt file>
---backdoor_sufi
+python3 -u src/main.py --name=nodefence_badCLIP --train_data backdoor_badCLIP.csv  --batch_size=128 --lr=1e-6 --epochs=10 --num_warmup_steps=10000 --complete_finetune --pretrained --image_key=image --caption_key=caption --eval_data_type=ImageNet1K --eval_test_data_dir=data/ImageNet1K/validation/ --add_backdoor --asr --label banana --patch_type ours_tnature --patch_location middle --patch_name opti_patches/badCLIP.jpg --patch_size=16
 ```
 
+## CleanCLIP Finetuning 
+```
+python3 -u src/main.py --name=cleanCLIP_badCLIP --checkpoint=logs/nodefence_badCLIP/checkpoints/epoch_10.pt  --train_data=data/GCC_Training500K/train.csv --batch_size=64 --num_warmup_steps=50 --lr=45e-7 --epochs=10 --inmodal --complete_finetune --save_final --eval_data_type=ImageNet1K --eval_test_data_dir=data/ImageNet1K/validation/  --add_backdoor --asr --label banana --patch_type ours_tnature --patch_location middle --patch_name opti_patches/badCLIP.jpg --patch_size=32
+```
 
-### Evaluation - ImageNet1K
-
+## Evaluation - ImageNet1K
 Clean Accuracy:
 ```
 python -m src.main --name <eval_imagenet_1k> --eval_data_type <dataset> --eval_test_data_dir data/ImageNet1K/validation/ --device_id 0 --checkpoint <ckpts/epoch_64.pt> 
 ```
-
 Attack Success Rate:
 ```
 python -m src.main --name <eval_imagenet_1k> --eval_data_type <dataset> --eval_test_data_dir data/ImageNet1K/validation/ --device_id 0 --checkpoint <ckpts/epoch_64.pt> --add_backdoor --asr --patch_type <type of backdoor trigger> --patch_location <location of backdoor trigger> --label <backdoor label> 
 ```
 
-
 For ImageNet1K: There should be a labels.csv in the test data directory that contains 2 columns -- image, label. image should have the location to the image in the local machine.
 
 ## Pretrained Checkpoints
 
-You can find the pre-trained checkpoints [here](https://drive.google.com/drive/folders/1kL6F3VuI6Loajks5h220anxfEBiSqz5Y?usp=share_link).
+You can find the pre-trained checkpoints [here](https://drive.google.com/drive/folders/1N6raM1EGyD21VvPG3cPfHLcs6NotVYQq?usp=sharing).
