@@ -1,6 +1,6 @@
 # BadCLIP (CVPR 2024 spotlight)
 
-<h1 align="center"><img src="./badclip_intro.png" width="75%"></h1>
+<h1 align="center"><img src="./badclip_intro.png" width="100%"></h1>
 
 > **BadCLIP: Dual-Embedding Guided Backdoor Attack on Multimodal Contrastive Learning**<br>
 > [https://arxiv.org/abs/2311.12075](https://arxiv.org/abs/2311.12075)
