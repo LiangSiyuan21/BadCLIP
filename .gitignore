@@ -28,8 +28,8 @@ condor_jobs
 *.log
 *.tsv
 *.out
-*.csv
-*.JPEG
+
+
 *.pt
 *pycache*
 
